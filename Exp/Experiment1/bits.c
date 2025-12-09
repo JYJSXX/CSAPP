@@ -239,7 +239,7 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+  return ((x | (~x + 1)) >> 31) + 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -254,7 +254,19 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+  int sign = x >> 31;
+  int temp = x ^ sign;
+  int bit16 = (!!(temp >> 16)) << 4;
+  temp = temp >> bit16;
+  int bit8 = (!!(temp >> 8)) << 3;
+  temp = temp >> bit8;
+  int bit4 = (!!(temp >> 4)) << 2;
+  temp = temp >> bit4;
+  int bit2 = (!!(temp >> 2)) << 1;
+  temp = temp >> bit2;
+  int bit1 = (!!(temp >> 1));
+  temp = temp >> bit1;
+  return bit16 + bit8 + bit4 + bit2 + bit1 + temp + 1;
 }
 //float
 /* 
@@ -269,7 +281,18 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  return 2;
+  int sign = uf >> 31;
+  int exp = (uf >> 23) & 0xFF;
+  int frac = uf & 0x7FFFFF;
+  if (exp == 0) {
+    return (sign << 31) | (frac << 1);
+  }
+  else if (exp == 0xFF) {
+    return uf;
+  }
+  else {
+    return (sign << 31) | ((exp + 1) << 23) | frac;
+  }
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -283,8 +306,18 @@ unsigned floatScale2(unsigned uf) {
  *   Max ops: 30
  *   Rating: 4
  */
-int floatFloat2Int(unsigned uf) {
-  return 2;
+ int floatFloat2Int(unsigned uf) {
+  int sign = uf >> 31;
+  int exp = (uf >> 23) & 0xFF;
+  exp -= 127;
+  int frac = uf & 0x7FFFFF;
+  if (exp > 31) return 0x80000000;
+  else if (exp < 0) return 0;
+  else if (frac == 0 && exp == -127) return 0;
+  else if (frac == 0) return sign ? -((1 << exp)) : (1 << exp);
+  // else if (exp > 23) return sign << 31 | (exp - 127) << 23 | (frac | (1 << 23));
+  // else if (exp < 23) return sign << 31 | exp << 23 | (frac >> (23 - exp));
+  else return sign << 31 | exp << 23 | frac;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
