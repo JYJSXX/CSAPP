@@ -1,0 +1,3 @@
+/Users/jyjs/Documents/USTC/CSAPP/Exp/build/CMakeFiles/temp.dir
+/Users/jyjs/Documents/USTC/CSAPP/Exp/build/CMakeFiles/edit_cache.dir
+/Users/jyjs/Documents/USTC/CSAPP/Exp/build/CMakeFiles/rebuild_cache.dir

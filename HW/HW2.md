@@ -62,7 +62,26 @@ long switch_prob (long x, long n) {
 
 ## P4 3.69
 
-(0x120 - 0x10) / 0h
+容易看出来，结构体数组占了 $0x120-0x8=0x118=280B$
+
+单个a_struct 占 $(4+1)\times8=40B$
+
+因此$CNT=\frac{280}{40}=7$
+
+idx 占 0x8B，类型为long，a_struct 占5个8B，因此其定义为
+
+```C
+typedef struct{
+  long idx;
+  long x[4];
+} a_struct;
+```
+
+
 
 ## P5 3.70
+
++ A. e1.p : 0, e1.y : 8, e1.x : 0, e1.next : 8
++ B. 共16个字节
++ C. `up->e2.x = *(up->e2.next->p) - up->e2.next->e1.y`
 

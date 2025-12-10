@@ -5,6 +5,7 @@
  *   Max ops: 24
  *   Rating: 3
  */
+#include <stdio.h>
 int isLessOrEqual(int x, int y) {
     int x_ = x & 0x7FFFFFFF;
     int y_ = y & 0x7FFFFFFF;
@@ -15,10 +16,27 @@ int isLessOrEqual(int x, int y) {
     int judge_b = ~(x_sign ^ y_sign) & !!((x_y >> 31));
     return judge_a | judge_b;
 }
+int floatFloat2Int(unsigned uf) {
+    int s_    = uf>>31;
+    int exp_  = ((uf&0x7f800000)>>23)-127;
+    int frac_ = (uf&0x007fffff)|0x00800000;
+    if(!(uf&0x7fffffff)) return 0;
+  
+    if(exp_ > 31) return 0x80000000;
+    if(exp_ < 0) return 0;
+  
+    if(exp_ > 23) frac_ <<= (exp_-23);
+    else frac_ >>= (23-exp_);
+  
+    if(!((frac_>>31)^s_)) return frac_;
+    else if(frac_>>31) return 0x80000000;
+    else return ~frac_+1;
+  }
 
 int main (){
-    int x = 0x7fffffff;
-    int y = 0x0;
-    isLessOrEqual(0x80000000, 0x80000001);
-    return isLessOrEqual(x, y);
+    floatFloat2Int(0x7f000000);
+    float f = (float)(0x7f000000u);
+    printf("%f\n", f);
+    printf("%d\n", (int)(f));
+    return 0;
 }
