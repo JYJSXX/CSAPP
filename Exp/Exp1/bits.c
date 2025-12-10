@@ -165,7 +165,8 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-    return !(x ^ 0x7FFFFFFF);
+    int y = x + 1;
+    return (!(~(x ^ y))) & !!(~x);
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -176,7 +177,10 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return !(((x | 0x55555555) ^ 0xFFFFFFFF));
+  int mask = 0x55;
+  mask |= (mask << 16);
+  mask |= (mask << 8);
+  return !(((x | mask) ^ (~0)));
 }
 /* 
  * negate - return -x 
@@ -210,7 +214,7 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return (~(!!x) + 1) & y | (~(~(!!x) + 1) & z);
+  return ((~(!!x) + 1) & y) | (~(~(!!x) + 1) & z);
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -220,8 +224,9 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-    int x_ = x & 0x7FFFFFFF;
-    int y_ = y & 0x7FFFFFFF;
+    int mask = (1 << 31) ^ (~0);
+    int x_ = x & mask;
+    int y_ = y & mask;
     int x_y = x_ + (~y_ + 1);
     int x_sign = x >> 31;
     int y_sign = y >> 31;
@@ -256,15 +261,16 @@ int logicalNeg(int x) {
 int howManyBits(int x) {
   int sign = x >> 31;
   int temp = x ^ sign;
-  int bit16 = (!!(temp >> 16)) << 4;
+  int bit16, bit8, bit4, bit2, bit1;
+  bit16 = (!!(temp >> 16)) << 4;
   temp = temp >> bit16;
-  int bit8 = (!!(temp >> 8)) << 3;
+  bit8 = (!!(temp >> 8)) << 3;
   temp = temp >> bit8;
-  int bit4 = (!!(temp >> 4)) << 2;
+  bit4 = (!!(temp >> 4)) << 2;
   temp = temp >> bit4;
-  int bit2 = (!!(temp >> 2)) << 1;
+  bit2 = (!!(temp >> 2)) << 1;
   temp = temp >> bit2;
-  int bit1 = (!!(temp >> 1));
+  bit1 = (!!(temp >> 1));
   temp = temp >> bit1;
   return bit16 + bit8 + bit4 + bit2 + bit1 + temp + 1;
 }
@@ -309,15 +315,15 @@ unsigned floatScale2(unsigned uf) {
  int floatFloat2Int(unsigned uf) {
   int sign = uf >> 31;
   int exp = (uf >> 23) & 0xFF;
+  int mask = 0x7f <<16 | 0xff << 8 | 0xff;
+
+  int frac = (uf & mask) + (1 << 23);
   exp -= 127;
-  int frac = uf & 0x7FFFFF;
-  if (exp > 31) return 0x80000000;
-  else if (exp < 0) return 0;
-  else if (frac == 0 && exp == -127) return 0;
-  else if (frac == 0) return sign ? -((1 << exp)) : (1 << exp);
-  // else if (exp > 23) return sign << 31 | (exp - 127) << 23 | (frac | (1 << 23));
-  // else if (exp < 23) return sign << 31 | exp << 23 | (frac >> (23 - exp));
-  else return sign << 31 | exp << 23 | frac;
+  if (exp > 31) return 1 << 31;
+  if (exp < 0) return 0;
+  if (exp > 23) frac <<= exp - 23;
+  else frac >>= 23 - exp;
+  return sign ? -frac : frac;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -333,5 +339,7 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    if (x > 127) return 0x7f800000;
+    if (x < -127) return 0;
+    return (x + 127) << 23;
 }

@@ -5,6 +5,7 @@
  *   Max ops: 24
  *   Rating: 3
  */
+#include <stdio.h>
 int isLessOrEqual(int x, int y) {
     int x_ = x & 0x7FFFFFFF;
     int y_ = y & 0x7FFFFFFF;
@@ -17,8 +18,8 @@ int isLessOrEqual(int x, int y) {
 }
 
 int main (){
-    int x = 0x7fffffff;
-    int y = 0x0;
-    isLessOrEqual(0x80000000, 0x80000001);
-    return isLessOrEqual(x, y);
+    int mask = 0x55;
+    mask <<= 16;
+    mask |= mask << 8;
+    printf("%x\n", mask);
 }
