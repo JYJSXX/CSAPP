@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "mm.h"
 #include "memlib.h"
@@ -23,11 +24,11 @@
  ********************************************************/
 team_t team = {
     /* Team name */
-    "",
+    "liuruibo",
     /* First member's full name */
-    "",
+    "liuruibo",
     /* First member's email address */
-    "",
+    "liuruibo21@mail.ustc.edu.cn",
     /* Second member's full name (leave blank if none) */
     "",
     /* Second member's email address (leave blank if none) */
@@ -57,14 +58,17 @@ int mm_init(void)
  */
 void *mm_malloc(size_t size)
 {
-    int newsize = ALIGN(size + SIZE_T_SIZE);
+    if (!size)
+        return NULL;
+
+    size_t newsize = ALIGN(size + SIZE_T_SIZE);
     void *p = mem_sbrk(newsize);
-    if ((int)p < 0)
-	return NULL;
-    else {
-        *(size_t *)p = size;
-        return (void *)((char *)p + SIZE_T_SIZE);
-    }
+
+    if (p == (void *)-1)
+        return NULL;
+
+    *(size_t *)p = size;
+    return (void *)((char *)p + SIZE_T_SIZE);
 }
 
 /*
@@ -72,6 +76,11 @@ void *mm_malloc(size_t size)
  */
 void mm_free(void *ptr)
 {
+    if (ptr == NULL)
+        return;
+
+    size_t *hdr = (size_t *)((char *)ptr - SIZE_T_SIZE);
+    *hdr = 0;
 }
 
 /*
@@ -82,13 +91,19 @@ void *mm_realloc(void *ptr, size_t size)
     void *oldptr = ptr;
     void *newptr;
     size_t copySize;
-    
+    if (ptr == NULL)
+        return mm_malloc(size);
+    if (!size) {
+        mm_free(ptr);
+        return NULL;
+    }
     newptr = mm_malloc(size);
     if (newptr == NULL)
-      return NULL;
+        return NULL;
+
     copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);
     if (size < copySize)
-      copySize = size;
+        copySize = size;
     memcpy(newptr, oldptr, copySize);
     mm_free(oldptr);
     return newptr;
