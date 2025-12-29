@@ -1,0 +1,4 @@
+double x;
+void fn(){
+    ;
+}
